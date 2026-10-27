@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: moon ci
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: velnest
+          POSTGRES_PASSWORD: velnest
+          POSTGRES_DB: velnest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U velnest -d velnest"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: "true"
+      VELNEST_TEST_DATABASE_URL: postgres://velnest:velnest@localhost:5432/velnest?sslmode=disable
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # moon needs history to detect affected projects.
+          fetch-depth: 0
+
+      # Installs proto and moon, then every tool pinned in .prototools
+      # (go, node, pnpm). The ~/.proto toolchain directory is cached.
+      - uses: moonrepo/setup-toolchain@v0
+        with:
+          auto-install: true
+
+      # Install only: the api:lint task runs golangci-lint itself.
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.15.0
+          install-only: true
+
+      - run: moon ci
+
+  migrate-staging:
+    name: migrate staging
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: moonrepo/setup-toolchain@v0
+        with:
+          auto-install: true
+
+      # GitHub runners are IPv4 only. STAGING_DATABASE_MIGRATE_URL must be
+      # Supabase's session pooler URL (port 5432 on the pooler host), not the
+      # IPv6-only direct host and not the transaction pooler (port 6543).
+      # The secret is only passed through env; never echo it.
+      - name: Apply migrations
+        working-directory: apps/api
+        env:
+          DATABASE_MIGRATE_URL: ${{ secrets.STAGING_DATABASE_MIGRATE_URL }}
+        run: go run ./cmd/migrate up

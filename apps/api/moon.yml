@@ -1,0 +1,48 @@
+language: 'go'
+layer: 'application'
+
+tasks:
+  dev:
+    command: 'go run ./cmd/server'
+    env:
+      ENV: 'development'
+    options:
+      persistent: true
+      runInCI: false
+
+  build:
+    script: |
+      CGO_ENABLED=0 go build -ldflags="-w -s" -o bin/server ./cmd/server
+      CGO_ENABLED=0 go build -ldflags="-w -s" -o bin/worker ./cmd/worker
+      CGO_ENABLED=0 go build -ldflags="-w -s" -o bin/migrate ./cmd/migrate
+    outputs:
+      - 'bin/'
+
+  test:
+    command: 'go test -race -cover ./...'
+    # Integration tests skip without a database locally and fail under CI, so the
+    # result depends on these variables. Without them in the cache key, a run
+    # that skipped them is replayed as a pass for a run that has a database.
+    inputs:
+      - '**/*'
+      - '$VELNEST_TEST_DATABASE_URL'
+      - '$CI'
+
+  lint:
+    command: 'golangci-lint run ./...'
+
+  # Table test for the Makefile's local-database guard (it protects migrate-down,
+  # db-reset, test and ci from running against a non-local database). It lives
+  # with the api project because that is the database it protects.
+  guard:
+    command: 'sh ../../scripts/test-make-guard.sh'
+    toolchains: 'system'
+    inputs:
+      - '/Makefile'
+      - '/scripts/test-make-guard.sh'
+
+  migrate:
+    command: 'go run ./cmd/migrate up'
+    options:
+      runInCI: false
+      cache: false

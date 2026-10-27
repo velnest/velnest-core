@@ -1,0 +1,8 @@
+projects:
+  api: 'apps/api'
+  web: 'apps/web'
+  openapi: 'packages/openapi'
+
+vcs:
+  client: 'git'
+  defaultBranch: 'main'

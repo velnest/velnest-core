@@ -1,0 +1,271 @@
+openapi: 3.0.3
+info:
+  title: Velnest API
+  version: 0.1.0
+  description: |
+    HTTP API for Velnest, an Indonesia-first household platform.
+
+    Every response uses the `{code, data, error}` envelope produced by
+    `github.com/davidsugianto/go-pkgs/response`: `code` mirrors the HTTP status,
+    `data` is present on success and `error` (a plain string) on failure.
+  contact:
+    name: Velnest
+    url: https://github.com/davidsugianto/velnest-core
+  license:
+    name: Proprietary
+    url: https://github.com/davidsugianto/velnest-core
+servers:
+  - url: http://localhost:7979
+    description: Local development
+  # Staging server: add here once a real URL exists.
+tags:
+  - name: system
+    description: Liveness and health endpoints.
+paths:
+  /v1/ping:
+    get:
+      operationId: ping
+      summary: Liveness check
+      description: Returns `ok` when the API process is up. Does not touch dependencies.
+      tags:
+        - system
+      responses:
+        '200':
+          description: The API is up.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/XRequestID'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PingResponse'
+              example:
+                code: 200
+                data:
+                  status: ok
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /v1/health:
+    get:
+      operationId: health
+      summary: Health check
+      description: Returns `ok` when the API and its database are reachable.
+      tags:
+        - system
+      responses:
+        '200':
+          description: The API and database are healthy.
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/XRequestID'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                code: 200
+                data:
+                  status: ok
+                  db: up
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+components:
+  headers:
+    XRequestID:
+      description: Unique identifier of the request, for log correlation.
+      schema:
+        type: string
+  schemas:
+    Envelope:
+      type: object
+      description: |
+        Base envelope (`response.Response`). `data` is omitted when empty and
+        `error` is omitted on success.
+      required:
+        - code
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, repeated in the body.
+          example: 200
+        data:
+          description: Response payload. Present on success only.
+        error:
+          type: string
+          description: Human-readable error message. Present on failure only.
+    SuccessEnvelope:
+      type: object
+      description: Success envelope. Concrete responses narrow `data`.
+      required:
+        - code
+      properties:
+        code:
+          type: integer
+          minimum: 200
+          maximum: 299
+          example: 200
+        data:
+          description: Response payload.
+    ErrorEnvelope:
+      type: object
+      description: Error envelope. `data` is never sent.
+      required:
+        - code
+        - error
+      properties:
+        code:
+          type: integer
+          minimum: 400
+          maximum: 599
+          example: 500
+        error:
+          type: string
+          description: Human-readable error message.
+          example: internal server error
+    PaginatedEnvelope:
+      type: object
+      description: |
+        Paginated success envelope (`response.PaginatedResponse`). Concrete list
+        responses narrow `data` to an array of items.
+      required:
+        - code
+        - page
+        - page_size
+        - total
+      properties:
+        code:
+          type: integer
+          example: 200
+        data:
+          type: array
+          description: Items on the current page.
+          items: {}
+        page:
+          type: integer
+          description: Current page number.
+          example: 1
+        page_size:
+          type: integer
+          description: Number of items per page.
+          example: 20
+        total:
+          type: integer
+          description: Total number of items across all pages.
+          example: 42
+    PingData:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+          example: ok
+    HealthData:
+      type: object
+      required:
+        - status
+        - db
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+          example: ok
+        db:
+          type: string
+          enum:
+            - up
+          example: up
+    PingResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/PingData'
+    HealthResponse:
+      allOf:
+        - $ref: '#/components/schemas/SuccessEnvelope'
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              $ref: '#/components/schemas/HealthData'
+  responses:
+    BadRequest:
+      description: The request is malformed or failed validation.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/XRequestID'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            code: 400
+            error: bad request
+    Unauthorized:
+      description: Authentication is missing or invalid.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/XRequestID'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            code: 401
+            error: unauthorized
+    Forbidden:
+      description: The caller is not allowed to perform this action.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/XRequestID'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            code: 403
+            error: forbidden
+    NotFound:
+      description: The resource does not exist.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/XRequestID'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            code: 404
+            error: not found
+    InternalServerError:
+      description: Unexpected server error.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/XRequestID'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            code: 500
+            error: internal server error
+    ServiceUnavailable:
+      description: A dependency (for example the database) is unavailable.
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/XRequestID'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            code: 503
+            error: database unavailable

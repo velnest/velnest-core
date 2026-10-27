@@ -1,0 +1,43 @@
+/* Velnest brand tokens. Source of truth: docs/velnest-core-build-plan.html */
+:root {
+  --bg: #F7F7F5;        /* Sand */
+  --surface: #FFFFFF;
+  --fg: #1F2937;        /* Slate */
+  --muted: #5A6573;
+  --line: #DFE3E9;
+  --stone: #CBD5E1;     /* Stone: borders */
+  --sage: #4CAF7D;      /* Sage: accent */
+  --sage-ink: #2E7D55;
+  --sage-wash: #E6F2EB;
+  --display: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --body: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161D;
+    --surface: #18202A;
+    --fg: #E8ECF0;
+    --muted: #9AA5B3;
+    --line: #2A3441;
+    --stone: #3A4656;
+    --sage: #5BBE8B;
+    --sage-ink: #7FD2A5;
+    --sage-wash: #1B3227;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #11161D;
+  --surface: #18202A;
+  --fg: #E8ECF0;
+  --muted: #9AA5B3;
+  --line: #2A3441;
+  --stone: #3A4656;
+  --sage: #5BBE8B;
+  --sage-ink: #7FD2A5;
+  --sage-wash: #1B3227;
+  color-scheme: dark;
+}

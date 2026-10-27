@@ -1,0 +1,7 @@
+extends:
+  - recommended
+
+rules:
+  # The v0 contract has no securitySchemes yet (ping/health are public).
+  # Re-enable (remove this line) when auth is added in a later week.
+  security-defined: off

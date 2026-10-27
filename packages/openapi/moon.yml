@@ -1,0 +1,14 @@
+# yaml-language-server: $schema: https://moonrepo.dev/schemas/project.json
+layer: 'library'
+language: 'yaml'
+
+tasks:
+  lint:
+    description: 'Lint the OpenAPI contract with Redocly.'
+    command: 'redocly lint openapi.yaml'
+    toolchains: ['node']
+    inputs:
+      - 'openapi.yaml'
+      - 'redocly.yaml'
+    options:
+      cache: true

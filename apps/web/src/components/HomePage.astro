@@ -1,0 +1,53 @@
+---
+import Base from '../layouts/Base.astro';
+import { locales, t, type Locale } from '../i18n/t';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+<Base locale={locale}>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <div class="brand">
+        <svg viewBox="0 0 64 56" aria-hidden="true">
+          <path d="M29 54 C17 47 5 35 3 5 C15 9 27 20 29 54 Z" fill="var(--fg)"></path>
+          <path d="M35 54 C37 23 47 11 61 3 C62 30 51 46 35 54 Z" fill="var(--sage)"></path>
+        </svg>
+        <div>
+          <div class="brand-name">{t(locale, 'brand')}</div>
+          <p class="tagline">{t(locale, 'tagline')}</p>
+        </div>
+      </div>
+      <nav aria-label={t(locale, 'lang.label')}>
+        <ul class="lang-switch">
+          {
+            locales.map((l) => (
+              <li>
+                <a
+                  href={`/${l}/`}
+                  hreflang={l}
+                  lang={l}
+                  aria-current={l === locale ? 'page' : undefined}
+                >
+                  {t(locale, `lang.${l}`)}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap hero">
+    <h1>{t(locale, 'hero.title')}</h1>
+    <p>{t(locale, 'hero.lead')}</p>
+    <p class="status">
+      <span class="status-label">{t(locale, 'status.label')}</span>
+      <span>{t(locale, 'status.value')}</span>
+    </p>
+  </main>
+</Base>
