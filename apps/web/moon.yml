@@ -1,0 +1,29 @@
+language: 'typescript'
+layer: 'application'
+
+tasks:
+  dev:
+    command: 'astro dev'
+    preset: 'server'
+    options:
+      persistent: true
+      runInCI: false
+
+  build:
+    command: 'astro build'
+    inputs:
+      - 'src/**/*'
+      - 'public/**/*'
+      - 'astro.config.mjs'
+      - 'tsconfig.json'
+      - 'package.json'
+    outputs:
+      - 'dist'
+
+  check:
+    command: 'astro check'
+    inputs:
+      - 'src/**/*'
+      - 'astro.config.mjs'
+      - 'tsconfig.json'
+      - 'package.json'

@@ -1,0 +1,9 @@
+# Versions come from .prototools (versionFromPrototools defaults to true).
+go: {}
+
+javascript:
+  packageManager: 'pnpm'
+
+node: {}
+
+pnpm: {}

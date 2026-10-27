@@ -1,0 +1,35 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/apps/api/bin/
+
+# Go workspace
+go.work
+go.work.sum
+
+# Node / Astro
+node_modules/
+dist/
+.astro/
+
+# moon
+.moon/cache
+.moon/docker
+
+# Environment
+.env
+.env.*
+!.env.example
+.vercel/
+
+# IDEs and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store

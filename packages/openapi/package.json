@@ -1,0 +1,10 @@
+{
+  "name": "@velnest/openapi",
+  "private": true,
+  "scripts": {
+    "lint": "redocly lint openapi.yaml"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.71.0"
+  }
+}
